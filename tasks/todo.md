@@ -1,8 +1,8 @@
 # TODO — claude-narrate
 
-- [ ] T-01 lib/contract.mjs
-- [ ] T-02 lib/json.mjs + lib/run.mjs
-- [ ] T-03 bin/index.mjs
+- [x] T-01 lib/contract.mjs
+- [x] T-02 lib/json.mjs + lib/run.mjs
+- [x] T-03 bin/index.mjs
 - [ ] T-04 bin/describe.mjs
 - [ ] T-05 bin/pick.mjs
 - [ ] T-06 bin/voice.mjs

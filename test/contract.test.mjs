@@ -39,7 +39,8 @@ await test('font size follows width, vertical margin follows height', async () =
 await test('one fixed part shape, two target frames, the fill limits', async () => {
   const c = await import('../lib/contract.mjs');
   assert.deepEqual(c.PART_SHAPE, { fps: 30, sampleRate: 44100, channels: 2,
-    videoCodec: 'x264', videoProfile: 'high', videoLevel: '4.0', audioCodec: 'aac', pixFmt: 'yuv420p' }, 'part shape');
+    videoCodec: 'h264', videoProfile: 'high', videoLevel: '4.0', audioCodec: 'aac', pixFmt: 'yuv420p' },
+    'part shape: measured here — ffmpeg calls its own h264 encoder h264, so -c:v x264 exits 8');
   assert.deepEqual(c.FRAMES, { landscape: [1920, 1080], portrait: [1080, 1920] }, 'target frames');
   assert.equal(c.FILL.SLOW_LIMIT, 0.20, 'SLOW_LIMIT');
   assert.equal(c.FILL.ESTIMATE_CHARS_PER_SEC, 3, 'estimate errs long: Chinese reads 4-5');
