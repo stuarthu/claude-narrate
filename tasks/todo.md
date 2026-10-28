@@ -3,7 +3,7 @@
 - [x] T-01 lib/contract.mjs
 - [x] T-02 lib/json.mjs + lib/run.mjs
 - [x] T-03 bin/index.mjs
-- [ ] T-04 bin/describe.mjs
+- [x] T-04 bin/describe.mjs
 - [ ] T-05 bin/pick.mjs
 - [ ] T-06 bin/voice.mjs
 - [ ] T-07 bin/preview.mjs
