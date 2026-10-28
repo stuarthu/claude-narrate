@@ -1,0 +1,30 @@
+{
+  "name": "claude-narrate",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Claude Code plugin: one idea in, one narrated video out, with four stops that wait for your yes.",
+  "license": "MIT",
+  "author": "Stuart Hu",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "video",
+    "narration",
+    "text-to-speech",
+    "ffmpeg",
+    "subtitles"
+  ],
+  "dependencies": {
+    "node-edge-tts": "^1.2.12"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "qa": "node qa/qa.mjs",
+    "check:fast": "node scripts/check-source.mjs",
+    "check:task": "node --test test/*.test.mjs && node scripts/check-layers.mjs",
+    "check:full": "node --test test/*.test.mjs && node qa/qa.mjs && node scripts/check-source.mjs && node scripts/check-layers.mjs"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "^18.7.0"
+  }
+}
