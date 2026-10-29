@@ -7,7 +7,7 @@
 - [x] T-05 bin/pick.mjs
 - [x] T-06 bin/voice.mjs
 - [x] T-07 bin/preview.mjs
-- [ ] T-08 bin/segment.mjs
+- [x] T-08 bin/segment.mjs
 - [ ] T-09 bin/concat.mjs
 - [ ] T-10 skills/narrate/SKILL.md
 - [ ] T-11 qa/qa.mjs
