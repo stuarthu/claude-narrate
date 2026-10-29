@@ -45,7 +45,7 @@ The skill calls the scripts through Bash. Claude never types an ffmpeg flag.
 ```sh
 node bin/index.mjs    --assets assets                     # walk, write per-clip JSON, report
 node bin/describe.mjs --clip assets/bench.mp4 --every 4   # frames out; Claude reads them
-node bin/pick.mjs     --work <name> --assets assets       # shots.json + missing report
+node bin/pick.mjs     --work <name> --assets assets --aspect landscape   # shots.json + missing report
 node bin/voice.mjs    --work <name> --engine edge         # audio/S-xxx.wav per sentence
 node bin/preview.mjs  --work <name>                      # preview.wav for stop 4
 node bin/segment.mjs  --work <name> --approved            # segments/S-xxx.mp4

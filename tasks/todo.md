@@ -11,4 +11,4 @@
 - [x] T-09 bin/concat.mjs
 - [x] T-10 skills/narrate/SKILL.md
 - [x] T-11 qa/qa.mjs
-- [ ] T-12 README, docs, CONSTRAINTS, CI
+- [x] T-12 README, docs, CONSTRAINTS, CI

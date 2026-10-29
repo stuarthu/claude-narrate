@@ -1,0 +1,44 @@
+# One job, two test sets. Nothing here publishes anything — see CONSTRAINTS.md, "No publish
+# workflow". A red run means our code is wrong; a network check skips out loud instead.
+name: test
+
+# Every branch push and every pull request, as the requirements ask.
+"on":
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # The tests cut real video and real audio, so ffmpeg and ffprobe must be on PATH, and
+      # the Chinese checks need a font that covers Chinese. Without them the QA runner would
+      # report a missing tool as a broken build, which is a lie.
+      - name: Install ffmpeg and a CJK font
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
+          fc-list :lang=zh | head -2
+          command -v ffmpeg
+          command -v ffprobe
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install the two dependencies
+        run: npm ci
+      # The two sets stay apart on purpose: the unit tests were written from the code, the
+      # QA runner from the acceptance checks. A bug that only shows when the thing actually
+      # runs is caught by the second one alone.
+      - name: Unit tests
+        run: npm test
+      - name: End-to-end QA runner
+        run: npm run qa
+      # Both scans run in CI too: the layer rule and the source rule are what stop a later
+      # change from quietly importing the wrong way or starting a shell.
+      - name: Source rules and layer rules
+        run: |
+          npm run check:fast
+          node scripts/check-layers.mjs

@@ -14,15 +14,15 @@
     "ffmpeg",
     "subtitles"
   ],
-  "dependencies": {
-    "node-edge-tts": "^1.2.12"
-  },
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "qa": "node qa/qa.mjs",
     "check:fast": "node scripts/check-source.mjs",
     "check:task": "node --test test/*.test.mjs && node scripts/check-layers.mjs",
-    "check:full": "node --test test/*.test.mjs && node qa/qa.mjs && node scripts/check-source.mjs && node scripts/check-layers.mjs"
+    "check:full": "node --test test/*.test.mjs && node qa/qa.mjs && node scripts/check-source.mjs && node scripts/check-layers.mjs && node scripts/check-scanners.mjs"
+  },
+  "dependencies": {
+    "node-edge-tts": "^1.2.12"
   },
   "devDependencies": {
     "dependency-cruiser": "^18.7.0"
