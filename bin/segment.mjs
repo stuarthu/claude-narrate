@@ -56,7 +56,9 @@ export function partPathOf(work, id, root = process.cwd()) {
 // ffprobe answers every stream on its own, and the csv writer here skips the fields a stream
 // does not have (measured: the video line held 5 fields, the audio line 4), so json is asked
 // and the two halves are merged back into one shape.
-async function shapeOf(path) {
+// Exported: concat asks the same question about the same files, so one file owns the probe
+// and the two cannot disagree about what a part's shape is (F-13).
+export async function shapeOf(path) {
   const r = await run(['ffprobe', '-v', 'error', '-show_entries',
     `stream=codec_type,${SHAPE_PROBE.join(',')}`, '-print_format', 'json', path]);
   if (!r.ok) return null;
@@ -75,7 +77,8 @@ async function shapeOf(path) {
   return one;
 }
 
-async function durationOf(path) {
+// Exported for the same reason as shapeOf: concat measures the parts it joins with this.
+export async function durationOf(path) {
   const r = await run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
     '-of', 'csv=p=0', path]);
   return r.ok && r.stdout.trim() !== '' ? Number(r.stdout.trim()) : null;
