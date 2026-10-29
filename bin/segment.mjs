@@ -20,7 +20,7 @@ import { run } from '../lib/run.mjs';
 import { audioPathOf } from '../bin/voice.mjs';
 import { estimateSec } from '../bin/pick.mjs';
 import { readFile, stat, rename, unlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { realpath } from 'node:fs/promises';
 
@@ -197,7 +197,11 @@ export async function cut(opts = {}) {
         { work, id: row.id, audio });
     }
 
-    const assetSec = await durationOf(row.assetPath);
+    // The plan names the clip the way the user typed it, so the name means the folder the
+    // command ran in. The render runs in the work folder instead, so the name is turned into
+    // an absolute path once here: one name, one file, for the probe and for ffmpeg.
+    const assetAbs = resolve(row.assetPath);
+    const assetSec = await durationOf(assetAbs);
     if (assetSec === null) {
       return resultError('segment', 'E_ASSET_MISSING',
         `the clip the plan names, ${row.assetPath}, is not on disk or cannot be probed. Nothing was rendered.`,
@@ -219,7 +223,7 @@ export async function cut(opts = {}) {
       if (gap <= FILL.SLOW_LIMIT) { fill = 'slow'; slowTo = wanted / have; }
       else fill = 'loop';
     }
-    jobs.push({ row, audio, audioSec, have, wanted, fill, slowTo });
+    jobs.push({ row, audio, audioSec, have, wanted, fill, slowTo, assetAbs });
   }
 
   await ensureDir(segmentsDir);
@@ -231,7 +235,7 @@ export async function cut(opts = {}) {
   let cursor = 0;
 
   for (const job of jobs) {
-    const { row, audio, audioSec, have, wanted, fill, slowTo } = job;
+    const { row, audio, audioSec, have, wanted, fill, slowTo, assetAbs } = job;
     const out = partPathOf(work, row.id, root);
     const tmp = `${out}.making.mp4`;
     const subsRel = join('subs-parts', `${row.id}.ass`);
@@ -256,7 +260,7 @@ export async function cut(opts = {}) {
       const reps = Math.ceil(wanted / have);
       const win = join(tmpDir, `${row.id}.mp4`);
       const winRun = await run(['ffmpeg', '-y', '-ss', String(row.startSec), '-t', String(have),
-        '-i', row.assetPath, '-c:v', 'h264', '-profile:v', PART_SHAPE.videoProfile,
+        '-i', assetAbs, '-c:v', 'h264', '-profile:v', PART_SHAPE.videoProfile,
         '-level', PART_SHAPE.videoLevel, '-pix_fmt', PART_SHAPE.pixFmt, '-r', String(PART_SHAPE.fps),
         win], { cwd: dir });
       if (!winRun.ok) {
@@ -271,7 +275,7 @@ export async function cut(opts = {}) {
     } else {
       const chain = fill === 'slow' ? `setpts=${slowTo.toFixed(6)}*PTS,${burn}` : burn;
       made = await run(['ffmpeg', '-y', '-ss', String(row.startSec), '-t', String(have),
-        '-i', row.assetPath, '-i', audio, '-map', '0:v', '-map', '1:a', '-vf', chain, ...ENCODE,
+        '-i', assetAbs, '-i', audio, '-map', '0:v', '-map', '1:a', '-vf', chain, ...ENCODE,
         '-t', String(wanted), tmp], { cwd: dir });
     }
 

@@ -54,7 +54,7 @@ filled by the first real run and re-read by `npm run check:full`.
 
 | Metric | Today | How to measure |
 | --- | --- | --- |
-| unit tests | 137 pass, 0 fail | `node --test test/*.test.mjs --report` |
+| unit tests | 138 pass, 0 fail | `node --test test/*.test.mjs --report` |
 | QA checks passing | 27 pass, 0 fail, 2 skipped of 29 (the 2 skips are A-4 and A-5, a real session asking questions) | `node qa/qa.mjs` |
 | dependencies with known vulns | 0 (`npm audit` on install) | `npm audit --json` |
 

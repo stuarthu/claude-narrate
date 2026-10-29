@@ -267,5 +267,51 @@ await test('checkpoint 3: one sentence becomes one real subtitled .mp4', async (
     'the picture is the target frame the contract names');
 });
 
+// The way the skill types the folder: a name relative to the folder you are standing in
+// (--assets assets). This row runs the real command lines from a scratch folder, because a
+// relative path only means anything inside one. It failed red before the fix: the probe
+// looked for the clip from the process folder and the render looked from the work folder,
+// so one plan gave two answers and nothing rendered.
+await test('pick -> segment: a plan made from a relative --assets still renders', async () => {
+  const repo = process.cwd();
+  const root = await makeRoot('rel');
+  await mkdir(join(root, 'assets'), { recursive: true });
+  await clip(join(root, 'assets'), 'rel-sky.mp4', 8);
+  await writeFile(join(root, 'assets', 'rel-sky.mp4.narrate.txt'), 'a bright sky with moving clouds\n#sky;clouds\n');
+  await ensureDir(join(root, '.narrate', 'rel'));
+  await writeFile(join(root, '.narrate', 'rel', 'script.txt'), '1. Clouds cross the bright sky.\n');
+  await writeJson(join(root, 'queries-in.json'), { queries: [
+    { id: 'S-001', sentence: 'Clouds cross the bright sky.', query: 'bright sky with moving clouds' }] });
+  await writeJson(join(root, 'said-rel-sky.json'), { segments: [
+    { startSec: 0, endSec: 8, confidence: 0.9, description: 'Clouds move across a bright sky.',
+      tags: ['sky', 'clouds'] }] });
+  const cfg = join(root, 'config', 'engines.json');
+  await mkdir(join(root, 'config'), { recursive: true });
+  await writeJson(cfg, { schema: 'narrate/engines@1', default: 'tone', engines: { tone: tone(3) } });
+
+  // The real command lines, run the way the skill runs them: from the project folder, with
+  // the assets folder named by a relative path.
+  const step = async (name, args) => {
+    const r = await run(['node', join(repo, 'bin', `${name}.mjs`), ...args], { cwd: root, timeoutMs: 180000 });
+    const got = JSON.parse(r.stdout || r.stderr || '{}');
+    assert.ok(got.ok === true, `${name} said: ${got.ok ? '' : `${got.error} ${got.message}`}`);
+    return got;
+  };
+  await step('index', ['--assets', 'assets']);
+  await step('describe', ['--clip', 'assets/rel-sky.mp4', '--said', 'said-rel-sky.json', '--root', root]);
+  await step('describe', ['--work', 'rel', '--queries', 'queries-in.json', '--root', root]);
+  const p = await step('pick', ['--work', 'rel', '--assets', 'assets', '--root', root, '--aspect', 'landscape']);
+  await step('voice', ['--work', 'rel', '--engine', 'tone', '--root', root, '--config', cfg]);
+  const c = await step('segment', ['--work', 'rel', '--root', root, '--approved']);
+
+  assert.equal(p.shots.length, 1, 'one shot for one sentence');
+  assert.notEqual(p.shots[0].assetPath, '', 'the plan named a clip');
+  assert.equal(c.parts.length, 1, 'the renderer cut one part for the plan it read');
+  const part = join(root, '.narrate', 'rel', 'segments', 'S-001.mp4');
+  assert.ok(await exists(part), 'the part is on disk, so the relative path reached the render');
+  const dur = await durationOf(part);
+  assert.ok(dur !== null && dur > 0, 'the part has a real length');
+});
+
 // The roots are ours: take them away so a run leaves nothing behind.
 for (const dir of ROOTS) await rm(dir, { recursive: true, force: true });
