@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "claude-narrate",
+  "description": "One idea typed in chat becomes one narrated, subtitled video made from the user's own clips, with four stops that wait for a clear yes.",
+  "owner": { "name": "Stuart Hu", "url": "https://github.com/stuart-hu" },
+  "plugins": [
+    {
+      "name": "narrate",
+      "version": "0.1.0",
+      "source": "./",
+      "description": "Turn one idea typed in chat into one narrated, subtitled video built from the user's own clips, stopping four times and waiting for a clear yes at each stop.",
+      "homepage": "https://github.com/stuart-hu/claude-narrate",
+      "license": "MIT",
+      "keywords": ["narrate", "video", "subtitles", "voiceover", "four stops"]
+    }
+  ]
+}

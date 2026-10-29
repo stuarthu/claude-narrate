@@ -1,0 +1,11 @@
+{
+  "name": "narrate",
+  "version": "0.1.0",
+  "description": "Turn one idea typed in chat into one narrated, subtitled video built from the user's own clips, stopping four times and waiting for a clear yes at each stop.",
+  "author": { "name": "Stuart Hu" },
+  "homepage": "https://github.com/stuart-hu/claude-narrate",
+  "repository": "https://github.com/stuart-hu/claude-narrate",
+  "license": "MIT",
+  "keywords": ["narrate", "video", "subtitles", "voiceover", "four stops"],
+  "skills": "./skills"
+}

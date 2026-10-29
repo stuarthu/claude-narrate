@@ -9,6 +9,6 @@
 - [x] T-07 bin/preview.mjs
 - [x] T-08 bin/segment.mjs
 - [x] T-09 bin/concat.mjs
-- [ ] T-10 skills/narrate/SKILL.md
+- [x] T-10 skills/narrate/SKILL.md
 - [ ] T-11 qa/qa.mjs
 - [ ] T-12 README, docs, CONSTRAINTS, CI
