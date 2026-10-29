@@ -35,6 +35,12 @@ function parseArgv(argv) {
   return { ok: true, opts };
 }
 
+// The names voice writes. preview reads them and segment reads them, so one file owns the
+// naming: a rename here cannot leave another step looking in the wrong place (F-13).
+export function audioPathOf(work, id, root = process.cwd()) {
+  return join(root, '.narrate', work, 'audio', `${id}.wav`);
+}
+
 export async function speak(opts = {}) {
   const root = opts.root ?? process.cwd();
   const work = opts.work;
@@ -126,7 +132,7 @@ export async function speak(opts = {}) {
   let groupKill = null;
 
   for (const row of wanted) {
-    const out = join(audioDir, `${row.id}.wav`);
+    const out = audioPathOf(work, row.id, root);
     const raw = join(audioDir, `${row.id}.raw.${ext}`);
     const textPath = `${out}.txt`;
 
