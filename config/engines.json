@@ -1,0 +1,25 @@
+{
+  "schema": "narrate/engines@1",
+  "default": "edge",
+  "note": "Swap the voice by changing this file only. bin/voice.mjs never changes when you swap an engine, and the default engine needs no API key.",
+  "engines": {
+    "edge": {
+      "argv": ["node", "bin/voice-edge.mjs", "{text}", "{out}", "en-US-AriaNeural"],
+      "ext": "mp3",
+      "timeoutMs": 60000,
+      "speech": true,
+      "network": true,
+      "needsKey": false,
+      "note": "Read aloud by Microsoft Edge through node-edge-tts. Free, no API key, but it needs network."
+    },
+    "local-tone": {
+      "argv": ["ffmpeg", "-y", "-f", "lavfi", "-i", "sine=frequency=220:duration=2", "-acodec", "pcm_s16le", "{out}"],
+      "ext": "wav",
+      "timeoutMs": 20000,
+      "speech": false,
+      "network": false,
+      "needsKey": false,
+      "note": "Not a voice: a low tone. It is here so the voice step can be checked with no network. Swap it for a real engine before you ship a video."
+    }
+  }
+}

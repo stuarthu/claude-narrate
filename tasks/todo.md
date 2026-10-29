@@ -5,7 +5,7 @@
 - [x] T-03 bin/index.mjs
 - [x] T-04 bin/describe.mjs
 - [x] T-05 bin/pick.mjs
-- [ ] T-06 bin/voice.mjs
+- [x] T-06 bin/voice.mjs
 - [ ] T-07 bin/preview.mjs
 - [ ] T-08 bin/segment.mjs
 - [ ] T-09 bin/concat.mjs

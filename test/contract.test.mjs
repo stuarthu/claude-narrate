@@ -13,8 +13,18 @@ await test('every error name from section 11 exists', async () => {
               'E_ASSET_MISSING','E_ASSET_TOO_SHORT','E_RENDER_OUTPUT_UNREADABLE'],
     concat: ['E_NOTHING_TO_CONCAT','E_SEGMENT_MISSING','E_CONCAT_MISMATCH'],
   };
+  // The document's list is a keep-list: our own names may be added beside it, so the
+  // check is that every doc name is there, in order, with no duplicates. An exact match
+  // would make a later stage unable to name its own failure.
   for (const group of Object.keys(want)) {
-    assert.deepEqual(c.ERRORS[group], want[group], `${group} names`);
+    const have = c.ERRORS[group];
+    assert.equal(new Set(have).size, have.length, `${group} names are not duplicated`);
+    let at = -1;
+    for (const name of want[group]) {
+      const i = have.indexOf(name);
+      assert.ok(i > at, `${group} names: ${name} is in the list, after the one before it`);
+      at = i;
+    }
   }
 });
 

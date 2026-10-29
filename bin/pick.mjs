@@ -21,6 +21,7 @@ import {
 } from '../lib/contract.mjs';
 import { readJson, writeJson } from '../lib/json.mjs';
 import { walk, MEDIA_EXT, jsonPathFor } from '../bin/index.mjs';
+import { parseScript } from '../lib/contract.mjs';
 import { readFile, stat } from 'node:fs/promises';
 import { join, basename, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -139,21 +140,6 @@ export function demote(scores, useCount, best) {
 }
 
 // ------------------------------------------------------------- stage products
-
-function parseScript(text) {
-  // script.txt is stop 2's product: one numbered line per sentence. A line that does not
-  // start with a number continues the sentence before it, so a wrapped sentence stays one
-  // sentence.
-  const rows = [];
-  for (const raw of text.split('\n')) {
-    const line = raw.trim();
-    if (!line) continue;
-    const m = /^(\d{1,3})[.)]\s+(.+)$/.exec(line);
-    if (m) rows.push({ id: `S-${m[1].padStart(3, '0')}`, sentence: m[2] });
-    else if (rows.length) rows[rows.length - 1].sentence += ' ' + line;
-  }
-  return rows;
-}
 
 // The parts of a clip that can be used. A described window is the only honest one: a clip
 // described only from 6 s on has nothing we know about before 6 s.
