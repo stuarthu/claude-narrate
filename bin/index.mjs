@@ -20,7 +20,7 @@ const SELF = fileURLToPath(import.meta.url);
 
 // The extensions we are willing to cut. Anything else in the assets folder is reported,
 // not guessed at: E_UNKNOWN_MEDIA means "we do not know how to cut this".
-const MEDIA_EXT = new Set(['mp4', 'mov', 'm4v', 'mkv', 'webm', 'avi', 'mpg', 'mpeg',
+export const MEDIA_EXT = new Set(['mp4', 'mov', 'm4v', 'mkv', 'webm', 'avi', 'mpg', 'mpeg',
   'mts', 'm2ts', 'ts', 'flv', 'wmv', 'gif']);
 
 // Files we (or a stock site) write beside a clip. They are metadata, never clips.
@@ -56,13 +56,13 @@ function shapeOf(width, height) {
   return width > height ? 2 : 1;
 }
 
-function jsonPathFor(absPath) {
+export function jsonPathFor(absPath) {
   return `${absPath.replace(/\.[^.]*$/, '')}.json`;
 }
 
 // ------------------------------------------------------------------ the walk
 
-async function walk(root) {
+export async function walk(root) {
   // Symlinks are followed so a clip on an external drive is found.
   // The guard is the chain of real folder paths on the current descent: a folder that
   // contains itself would loop forever. A folder reached by two different paths IS walked

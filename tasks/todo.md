@@ -4,7 +4,7 @@
 - [x] T-02 lib/json.mjs + lib/run.mjs
 - [x] T-03 bin/index.mjs
 - [x] T-04 bin/describe.mjs
-- [ ] T-05 bin/pick.mjs
+- [x] T-05 bin/pick.mjs
 - [ ] T-06 bin/voice.mjs
 - [ ] T-07 bin/preview.mjs
 - [ ] T-08 bin/segment.mjs
