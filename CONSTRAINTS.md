@@ -72,8 +72,9 @@ filled by the first real run and re-read by `npm run check:full`.
 | at task end | `npm run check:task` (unit tests + layers) | under 90 |
 | at review or in CI | `npm run check:full` (unit + QA + both scans) | minutes |
 
-CI runs one `test.yml`: install ffmpeg and a CJK font, run the unit tests, run the QA
-runner. **No publish workflow** — nothing ships to npm, so a tag would mean nothing.
+CI runs one `test.yml`: check the repo down first (without that step the runner has no
+`package.json`, no lockfile and no code, so `npm ci` dies and every test set is skipped), then
+install ffmpeg and a CJK font, run the unit tests, run the QA runner. **No publish workflow** — nothing ships to npm, so a tag would mean nothing.
 
 ## Skipped, out loud
 

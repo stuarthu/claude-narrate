@@ -13,6 +13,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      # Nothing runs without the code: the runner starts with an empty folder, so the first
+      # step must bring the repo down. Without it npm sees no package.json and no lockfile,
+      # and every later step is skipped.
+      - name: Check out the repo
+        uses: actions/checkout@v4
       # The tests cut real video and real audio, so ffmpeg and ffprobe must be on PATH, and
       # the Chinese checks need a font that covers Chinese. Without them the QA runner would
       # report a missing tool as a broken build, which is a lie.
@@ -23,10 +28,12 @@ jobs:
           fc-list :lang=zh | head -2
           command -v ffmpeg
           command -v ffprobe
-      - name: Node 22
+      # SPEC.md says Node 24, and that is what this host runs, so the runner must not sit
+      # two majors behind the code it is testing.
+      - name: Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Install the two dependencies
         run: npm ci
       # The two sets stay apart on purpose: the unit tests were written from the code, the
