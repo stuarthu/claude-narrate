@@ -20,7 +20,7 @@ import { partPathOf, shapeOf, durationOf } from '../bin/segment.mjs';
 import { writeText, ensureDir } from '../lib/json.mjs';
 import { run } from '../lib/run.mjs';
 import { readFile, stat, rename, unlink, mkdir, realpath } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SELF = fileURLToPath(import.meta.url);
@@ -85,7 +85,11 @@ export async function joinParts(opts = {}) {
       + `say yes at stop 4 and run this again.`, { work });
   }
 
-  const out = opts.out ?? join(root, 'out', `${work}.mp4`);
+  // A name typed as `--out out/<work>.mp4` means the run root, not the folder the command
+  // happens to run in — `--root` can point somewhere else, and one name must mean one place
+  // for the part list, the temp file and the finished video. An absolute name is kept as it
+  // stands.
+  const out = opts.out ? resolve(root, opts.out) : join(root, 'out', `${work}.mp4`);
   const dir = join(root, '.narrate', work);
   const segmentsDir = join(dir, 'segments');
   const scriptPath = join(dir, 'script.txt');
@@ -195,10 +199,10 @@ export async function joinParts(opts = {}) {
 
   // The out folder is made before the list is written, so a first run into an empty place
   // works the same as a re-run.
-  const made = await ensureDir(join(root, 'out'));
+  const made = await ensureDir(dirname(out));
   if (!made.ok) {
     return resultError('concat', 'E_CONCAT_WRITE_FAILED',
-      `cannot write into the out folder: ${join(root, 'out')} (${made.errno ?? ''})`,
+      `cannot write into the out folder: ${dirname(out)} (${made.errno ?? ''})`,
       { work, ids, files, out, parts: parts.length, expectedSec });
   }
 

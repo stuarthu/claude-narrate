@@ -313,5 +313,58 @@ await test('pick -> segment: a plan made from a relative --assets still renders'
   assert.ok(dur !== null && dur > 0, 'the part has a real length');
 });
 
+// The same bug class one step later. The skill types the name as `--out out/<work>.mp4`, and
+// `--root` may point somewhere else, so the name and the root are two different places. Before
+// the fix the name was used as it stood: it meant the folder the command ran in, so the part
+// list write failed with ENOENT and nothing joined. Red run: this row failed with
+// `E_CONCAT_WRITE_FAILED cannot write the part list: out/rel.mp4.concat.txt (ENOENT)`.
+await test('segment -> concat: a relative --out still writes when --root is elsewhere', async () => {
+  const repo = process.cwd();
+  const root = await makeRoot('outrel');
+  // The command runs somewhere that is not the run root — that is the only place a relative
+  // name can disagree with the root.
+  const elsewhere = await makeRoot('elsewhere');
+
+  await mkdir(join(root, 'assets'), { recursive: true });
+  await clip(join(root, 'assets'), 'outrel-sky.mp4', 8);
+  await writeFile(join(root, 'assets', 'outrel-sky.mp4.narrate.txt'), 'a bright sky with moving clouds\n#sky;clouds\n');
+  await ensureDir(join(root, '.narrate', 'rel'));
+  await writeFile(join(root, '.narrate', 'rel', 'script.txt'), '1. Clouds cross the bright sky.\n');
+  await writeJson(join(root, 'queries-in.json'), { queries: [
+    { id: 'S-001', sentence: 'Clouds cross the bright sky.', query: 'bright sky with moving clouds' }] });
+  await writeJson(join(root, 'said-outrel-sky.json'), { segments: [
+    { startSec: 0, endSec: 8, confidence: 0.9, description: 'Clouds move across a bright sky.',
+      tags: ['sky', 'clouds'] }] });
+  const cfg = join(root, 'config', 'engines.json');
+  await mkdir(join(root, 'config'), { recursive: true });
+  await writeJson(cfg, { schema: 'narrate/engines@1', default: 'tone', engines: { tone: tone(3) } });
+
+  const step = async (name, args) => {
+    const r = await run(['node', join(repo, 'bin', `${name}.mjs`), ...args],
+      { cwd: elsewhere, timeoutMs: 180000 });
+    const got = JSON.parse(r.stdout || r.stderr || '{}');
+    assert.ok(got.ok === true, `${name} said: ${got.ok ? '' : `${got.error} ${got.message}`}`);
+    return got;
+  };
+  await step('index', ['--assets', join(root, 'assets')]);
+  await step('describe', ['--clip', join(root, 'assets', 'outrel-sky.mp4'), '--said',
+    join(root, 'said-outrel-sky.json'), '--root', root]);
+  await step('describe', ['--work', 'rel', '--queries', join(root, 'queries-in.json'), '--root', root]);
+  await step('pick', ['--work', 'rel', '--assets', join(root, 'assets'), '--root', root,
+    '--aspect', 'landscape']);
+  await step('voice', ['--work', 'rel', '--engine', 'tone', '--root', root, '--config', cfg]);
+  await step('segment', ['--work', 'rel', '--root', root, '--approved']);
+  const j = await step('concat', ['--work', 'rel', '--root', root, '--approved', '--out', 'out/rel.mp4']);
+
+  const out = join(root, 'out', 'rel.mp4');
+  assert.ok(await exists(out), 'the video landed under the run root, not under the folder the command ran in');
+  assert.ok(!(await exists(join(elsewhere, 'out', 'rel.mp4'))),
+    'and nothing was written where the command ran');
+  assert.equal(j.out, out, 'the result names the place the file is really at');
+  assert.ok(await exists(concatListPathOf(out)), 'and the list it was made from sits beside it');
+  const dur = await durationOf(out);
+  assert.ok(dur !== null && dur > 0, 'the joined video has a real length');
+});
+
 // The roots are ours: take them away so a run leaves nothing behind.
 for (const dir of ROOTS) await rm(dir, { recursive: true, force: true });
