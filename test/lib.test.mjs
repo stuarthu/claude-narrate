@@ -29,13 +29,27 @@ await test('run spawns detached so the process-group kill works, and a timeout k
   assert.equal(await exists('/tmp/narrate-run/marker.txt'), false, 'the child never reached the point past the timeout');
 });
 
+// The ids come from the helper's own file, so the check asks about the sleeps THIS test
+// started. The old check asked "is any process on this machine named sleep", and a
+// background watcher running `sleep 20` for its own reasons made the test fail while our
+// code was right. That is a red run about the machine, which section 12 forbids.
 await test('run kills the engine child AND its own children', async () => {
-  const r = await run(['node', 'test/helpers/grandchild.mjs'], { timeoutMs: 300 });
+  await rm('/tmp/narrate-grandchild', { recursive: true, force: true });
+  const r = await run(['node', 'test/helpers/grandchild.mjs'], { timeoutMs: 1500 });
   assert.equal(r.timedOut, true, 'timed out');
   assert.equal(r.groupKill, 'ok', 'group kill reported ok');
+  // The timeout is 1.5 s, not the 300 ms the test used before. Measured: node's own start-up
+  // passes 300 ms on a busy machine, which killed the helper before it wrote its ids — a red
+  // run about the machine again (section 12). The helper still hangs, so it still times out.
+  const pidsPath = '/tmp/narrate-grandchild/pids.txt';
+  assert.ok(await exists(pidsPath), 'the helper got to write the ids it started');
+  const started = (await readFile(pidsPath, 'utf8'))
+    .split('\n').filter((s) => s !== '').map(Number);
+  assert.equal(started.length, 2, 'the helper recorded both children it started');
   const ps = await run(['ps', '-eo', 'pid,comm']);
-  const left = ps.stdout.split('\n').filter((line) => line.includes(' sleep'));
-  assert.equal(left.length, 0, 'no sleep survived the group kill');
+  const alive = new Set(ps.stdout.split('\n').map((line) => Number(line.trim().split(' ')[0])));
+  const left = started.filter((pid) => alive.has(pid));
+  assert.equal(left.length, 0, 'no sleep the helper started survived the group kill');
 });
 
 await test('captured stderr is capped, and the cap says so', async () => {
