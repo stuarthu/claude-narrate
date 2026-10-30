@@ -82,6 +82,12 @@ install ffmpeg and a CJK font, run the unit tests, run the QA runner. **No publi
 reports each as **skipped, tool missing** rather than as a pass. They are listed as
 aspirations, not as rules, until someone installs them.
 
+The same rule holds for a machine, not just for a tool. A CI machine has no audio device —
+`/dev/snd` holds no `hw*` entry there — so `ffplay` has nothing to play into and complains
+about a missing sound card. A-9 then skips out loud with that reason and still measures the
+file; on this host, which has two real cards, it runs `ffplay`. A machine without a sound
+card must never read as a broken build (section 12).
+
 ## Exceptions
 
 No exceptions. An exception needs an owner and an expiry date; an exception without either

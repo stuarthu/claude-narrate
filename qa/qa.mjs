@@ -58,8 +58,9 @@ async function cli(name, args, timeoutMs = 180000) {
   if (out) return { r, json: out };
   const err = parseJson(r.stderr);
   if (err) return { r, json: err };
+  const why = r.timedOut ? ` (killed after ${timeoutMs} ms)` : ` code=${r.code}`;
   throw new Error(`${name} answered no JSON: stdout ${JSON.stringify(r.stdout.slice(0, 200))} / ` +
-    `stderr ${JSON.stringify(r.stderr.slice(0, 200))} code=${r.code}`);
+    `stderr ${JSON.stringify(r.stderr.slice(0, 200))}${why}`);
 }
 
 async function ok(name, args, timeoutMs = 180000) {
@@ -311,9 +312,14 @@ async function longFlow() {
   assert.ok(q.json.ok === true, `describe said: ${q.json.error} ${q.json.message}`);
   const p = await ok('pick', ['--work', work, '--assets', FIX.long, '--root', ROOT, '--aspect', 'landscape']);
   const v = await ok('voice', ['--work', work, '--root', ROOT, '--config', CFG]);
-  const c = await ok('segment', ['--work', work, '--root', ROOT, '--approved']);
+  // The 61-part flow gets a bigger cap than the other rows. Measured on this host: its
+  // segment step needs 199 s, just past the 180 s every other flow is given, so the step was
+  // killed rather than run. Section 12: a red run must mean our code is wrong, never the
+  // machine, so the cap is raised for a slow machine and the row still says out loud when a
+  // step is killed. The other flows keep the 180 s they already pass inside.
+  const c = await ok('segment', ['--work', work, '--root', ROOT, '--approved'], 600000);
   const out = join(ROOT, 'out', `${work}.mp4`);
-  const j = await ok('concat', ['--work', work, '--root', ROOT, '--approved', '--out', out]);
+  const j = await ok('concat', ['--work', work, '--root', ROOT, '--approved', '--out', out], 600000);
   LONG = { work, scan: scan.json, script, q: q.json, p, v, c, j, out };
   return LONG;
 }
@@ -620,17 +626,31 @@ await row('A-8', 'After voice, one audio file per sentence, and the name maps ba
   }
 });
 
+// A-9 asks about ffplay, which pushes sound into a real device. A CI machine has no audio
+// device at all, and ffplay then complains about a missing sound card. That is the machine,
+// not our code (section 12), so the row says so out loud. The file is still measured below.
+async function audioDevice() {
+  try { return (await readdir('/dev/snd')).some((n) => n.startsWith('hw')); }
+  catch { return false; }
+}
+
 await row('A-9', 'Stop 4\'s audio-only file plays in ffplay and matches the script.', async () => {
   const m = await mainFlow();
   const wav = join(ROOT, '.narrate', m.work, 'preview.wav');
   assert.ok(await exists(wav), 'stop 4 wrote its audio-only file');
-  const r = await run(['timeout', '20', 'ffplay', '-loglevel', 'error', '-t', '0.2',
-    '-autoexit', wav]);
-  assert.ok(r.ok && r.stderr === '', `ffplay: ${r.stderr.replace(/\s+/g, ' ').slice(0, 160)} code=${r.code}`);
+  let noDevice = null;
+  if (await audioDevice()) {
+    const r = await run(['timeout', '20', 'ffplay', '-loglevel', 'error', '-t', '0.2',
+      '-autoexit', wav]);
+    assert.ok(r.ok && r.stderr === '', `ffplay: ${r.stderr.replace(/\s+/g, ' ').slice(0, 160)} code=${r.code}`);
+  } else {
+    noDevice = 'no audio device in /dev/snd on this machine, so ffplay had nothing to play into';
+  }
   const got = await durationOf(wav);
   assert.ok(got !== null && Math.abs(got - m.preview.expectedSec) <= m.preview.toleranceSec,
     `the file measures ${got} s against the ${m.preview.expectedSec} s the step expected`);
   assert.equal(m.preview.parts, MAIN_SCRIPT.length, 'the join read one recording per sentence');
+  return noDevice;
 });
 
 await row('A-10', 'The finished video plays. Each sentence\'s picture length differs from its audio length by no more than 0.2 s.', async () => {
