@@ -3,4 +3,3 @@ node_modules/
 assets/
 *.tmp.mp4
 *.concat.txt
-package-lock.json
